@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum DealState {
+  CREATED
+  PAID
+  LABEL_CREATED
+  DROPPED_OFF
+  IN_TRANSIT
+  DELIVERED
+  PICKED_UP
+  ACCEPTED
+  RELEASED
+  DISPUTED
+  REFUNDED
+}
+
+enum ShippingProvider {
+  OMNIVA
+  LP_EXPRESS
+}
+
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  username       String      @unique
+  passwordHash   String
+  role           Role        @default(USER)
+  twoFactorSecret String?
+  recoveryCodes  String[]
+  createdAt      DateTime    @default(now())
+  profile        Profile?
+  listings       Listing[]
+  buyerDeals     Deal[]      @relation("BuyerDeals")
+  sellerDeals    Deal[]      @relation("SellerDeals")
+  auditLogs      AuditLog[]
+  messages       Message[]
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarUrl    String?
+  bannerUrl    String?
+  bio          String?
+  reputation   Int     @default(0)
+}
+
+model Listing {
+  id                String   @id @default(cuid())
+  sellerId          String
+  seller            User     @relation(fields: [sellerId], references: [id])
+  title             String
+  description       String
+  category          String
+  condition         String
+  priceCents        Int
+  stock             Int
+  shippingProviders ShippingProvider[]
+  publishedAt       DateTime @default(now())
+  deals             Deal[]
+}
+
+model Deal {
+  id                String           @id @default(cuid())
+  listingId          String
+  listing            Listing          @relation(fields: [listingId], references: [id])
+  buyerId            String
+  buyer              User             @relation("BuyerDeals", fields: [buyerId], references: [id])
+  sellerId           String
+  seller             User             @relation("SellerDeals", fields: [sellerId], references: [id])
+  state              DealState        @default(CREATED)
+  shippingProvider   ShippingProvider
+  pickupPointId      String
+  paymentIntentId    String?
+  totalCents         Int
+  ledgerEntries      LedgerEntry[]
+  evidenceItems      EvidenceItem[]
+  messages           Message[]
+  trackingEvents     TrackingEvent[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model LedgerEntry {
+  id          String   @id @default(cuid())
+  dealId      String
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  kind        String
+  amountCents Int
+  metadata    Json
+  createdAt   DateTime @default(now())
+}
+
+model EvidenceItem {
+  id          String   @id @default(cuid())
+  dealId      String
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  url         String
+  note        String?
+  uploaderId  String
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  dealId    String?
+  deal      Deal?    @relation(fields: [dealId], references: [id])
+  content   String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model TrackingEvent {
+  id          String   @id @default(cuid())
+  dealId       String
+  deal         Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  status       String
+  rawPayload   Json
+  occurredAt   DateTime @default(now())
+}
+
+model Guild {
+  id          String  @id @default(cuid())
+  name        String
+  channels    Channel[]
+  roles       GuildRole[]
+  memberships GuildMembership[]
+}
+
+model Channel {
+  id      String @id @default(cuid())
+  guildId String
+  guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name    String
+  type    String
+}
+
+model GuildRole {
+  id          String   @id @default(cuid())
+  guildId      String
+  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name         String
+  permissions  String[]
+}
+
+model GuildMembership {
+  id       String @id @default(cuid())
+  guildId  String
+  guild    Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  userId   String
+  roleId   String?
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId      String
+  actor        User     @relation(fields: [actorId], references: [id])
+  action       String
+  entity       String
+  entityId     String
+  before       Json?
+  after        Json?
+  createdAt    DateTime @default(now())
+}

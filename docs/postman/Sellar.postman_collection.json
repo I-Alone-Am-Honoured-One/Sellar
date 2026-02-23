@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "Sellar API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"demoUser\",\n  \"password\": \"Password1234!\"\n}" }
+      }
+    },
+    {
+      "name": "Auth Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password1234!\"\n}" }
+      }
+    },
+    {
+      "name": "Create Listing",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/listings", "host": ["{{baseUrl}}"], "path": ["listings"] },
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Steam gift card\",\n  \"description\": \"Unused code with proof and receipt image.\",\n  \"category\": \"Gift Cards\",\n  \"condition\": \"NEW\",\n  \"priceCents\": 3000,\n  \"stock\": 1,\n  \"shippingProviders\": [\"OMNIVA\", \"LP_EXPRESS\"]\n}" }
+      }
+    },
+    {
+      "name": "Checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/checkout", "host": ["{{baseUrl}}"], "path": ["checkout"] },
+        "body": { "mode": "raw", "raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"quantity\": 1,\n  \"shippingProvider\": \"OMNIVA\",\n  \"pickupPointId\": \"OMNIVA-001\"\n}" }
+      }
+    },
+    {
+      "name": "Deal Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/deals/{{dealId}}/messages", "host": ["{{baseUrl}}"], "path": ["deals", "{{dealId}}", "messages"] },
+        "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hi, I paid and uploaded evidence.\",\n  \"type\": \"TEXT\"\n}" }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "listingId", "value": "" },
+    { "key": "dealId", "value": "" }
+  ]
+}
